@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avalie-nos — Marcelontra Lanches</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topo">
+    <div class="container">
+      <a href="index.html" class="logo"><span class="marca">M</span>Marcelontra<span>Lanches</span></a>
+      <nav>
+        <a href="index.html" class="esconder-celular">🍔 Cardápio</a>
+        <span class="menu-usuario" id="menuUsuario"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container pagina-avaliar">
+    <div class="atalhos-pedido">
+      <a href="index.html"><span class="seta">←</span>Voltar ao cardápio</a>
+    </div>
+
+    <!-- Média geral -->
+    <section class="cartao resumo-avaliacoes">
+      <div class="media-grande">
+        <strong id="media">–</strong>
+        <div class="estrelas-fixas" id="estrelasMedia"></div>
+        <small id="totalAvaliacoes">Carregando...</small>
+      </div>
+      <div class="barras" id="barras"></div>
+    </section>
+
+    <!-- Formulário (ou aviso para entrar) -->
+    <section class="cartao" id="areaFormulario"></section>
+
+    <!-- O que os clientes disseram -->
+    <section>
+      <h2 class="secao-titulo">💬 O que dizem da Marcelontra</h2>
+      <div id="listaAvaliacoes"></div>
+    </section>
+
+    <div class="botoes-voltar">
+      <a class="botao grande" href="index.html">🍔 Voltar ao cardápio</a>
+    </div>
+  </main>
+
+  <div class="aviso" id="aviso"></div>
+
+  <script src="comum.js"></script>
+  <script>
+    const TEXTO_NOTA = ['', 'Muito ruim 😞', 'Ruim 🙁', 'Regular 😐', 'Bom 🙂', 'Excelente! 🤩'];
+    let notaEscolhida = 0;
+
+    // ★★★★☆ — estrelas cheias e vazias (aceita meia nota arredondando)
+    const estrelas = (nota) => {
+      const cheias = Math.round(nota);
+      return '<span class="cheia">' + '★'.repeat(cheias) + '</span>' +
+             '<span class="vazia">' + '★'.repeat(5 - cheias) + '</span>';
+    };
+
+    async function carregar() {
+      const [{ dados }] = await Promise.all([api('/api/avaliacoes'), carregarUsuario()]);
+
+      // ----- média e barrinhas -----
+      const total = dados.total || 0;
+      $('media').textContent = total ? Number(dados.media).toFixed(1).replace('.', ',') : '–';
+      $('estrelasMedia').innerHTML = estrelas(dados.media || 0);
+      $('totalAvaliacoes').textContent = total === 0 ? 'Nenhuma avaliação ainda'
+        : `${total} ${total === 1 ? 'avaliação' : 'avaliações'}`;
+      $('barras').innerHTML = [5, 4, 3, 2, 1].map((n) => {
+        const qtd = dados['n' + n] || 0;
+        const porcento = total ? Math.round((qtd / total) * 100) : 0;
+        return `
+          <div class="barra">
+            <span>${n} ★</span>
+            <div class="trilho"><div style="width:${porcento}%"></div></div>
+            <small>${qtd}</small>
+          </div>`;
+      }).join('');
+
+      // ----- formulário -----
+      const minha = dados.lista.find((a) => a.minha);
+      desenharFormulario(minha);
+
+      // ----- lista de avaliações -----
+      $('listaAvaliacoes').innerHTML = dados.lista.length === 0
+        ? '<div class="cartao"><p class="vazio"><span class="emoji">⭐</span>Seja o primeiro a avaliar a Marcelontra!</p></div>'
+        : dados.lista.map((a) => `
+            <article class="cartao avaliacao ${a.minha ? 'minha' : ''}">
+              <div class="avaliacao-topo">
+                <span class="avatar">${esc(a.nome.charAt(0).toUpperCase())}</span>
+                <div>
+                  <strong>${esc(a.nome)}${a.minha ? ' <span class="opcao-item">você</span>' : ''}</strong>
+                  <small>${esc(a.data.slice(0, 10).split('-').reverse().join('/'))}</small>
+                </div>
+                <div class="estrelas-fixas pequenas">${estrelas(a.nota)}</div>
+              </div>
+              ${a.comentario ? `<p>${esc(a.comentario)}</p>` : ''}
+            </article>`).join('');
+    }
+
+    function desenharFormulario(minha) {
+      if (!usuarioAtual) {
+        $('areaFormulario').innerHTML = `
+          <div class="aviso-login">
+            <span class="emoji">⭐</span>
+            <h3>Conta pra gente: o que achou?</h3>
+            <p>Entre na sua conta para deixar sua avaliação.</p>
+            <a class="botao grande" href="login.html?voltar=avaliar.html">Entrar para avaliar</a>
+          </div>`;
+        return;
+      }
+
+      notaEscolhida = minha ? minha.nota : 0;
+      $('areaFormulario').innerHTML = `
+        <form class="formulario" id="formAvaliacao">
+          <h2>${minha ? 'Sua avaliação' : 'Avalie a Marcelontra'}</h2>
+          <p class="texto-suave">${minha ? 'Você já avaliou. Quer mudar alguma coisa?' : 'Toque nas estrelas para dar sua nota.'}</p>
+          <div class="estrelas-escolher" id="estrelas" role="radiogroup" aria-label="Nota de 1 a 5">
+            ${[1, 2, 3, 4, 5].map((n) => `
+              <button type="button" data-nota="${n}" role="radio" aria-label="${n} ${n === 1 ? 'estrela' : 'estrelas'}">★</button>`).join('')}
+          </div>
+          <p class="texto-nota" id="textoNota"></p>
+          <div class="campo">
+            <label for="comentario">Comentário (opcional)</label>
+            <textarea id="comentario" rows="3" maxlength="500"
+              placeholder="Ex.: O X-Tudo chegou quentinho, muito bom!">${esc(minha ? minha.comentario : '')}</textarea>
+          </div>
+          <p class="erro" id="erroAvaliacao"></p>
+          <button class="botao grande" type="submit" id="botaoAvaliar">
+            ${minha ? 'Atualizar avaliação' : 'Enviar avaliação'}
+          </button>
+        </form>`;
+      pintarEstrelas(notaEscolhida);
+    }
+
+    // Acende as estrelas até a nota n
+    function pintarEstrelas(n) {
+      document.querySelectorAll('#estrelas button').forEach((b) => {
+        const ativa = Number(b.dataset.nota) <= n;
+        b.classList.toggle('acesa', ativa);
+        b.setAttribute('aria-checked', Number(b.dataset.nota) === notaEscolhida);
+      });
+      $('textoNota').textContent = TEXTO_NOTA[n] || '';
+    }
+
+    const area = $('areaFormulario');
+    area.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-nota]');
+      if (!b) return;
+      notaEscolhida = Number(b.dataset.nota);
+      pintarEstrelas(notaEscolhida);
+    });
+    area.addEventListener('mouseover', (e) => {
+      const b = e.target.closest('[data-nota]');
+      if (b) pintarEstrelas(Number(b.dataset.nota));
+    });
+    area.addEventListener('mouseout', (e) => {
+      if (e.target.closest('[data-nota]')) pintarEstrelas(notaEscolhida);
+    });
+
+    area.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!notaEscolhida) {
+        $('erroAvaliacao').textContent = 'Escolha de 1 a 5 estrelas.';
+        return;
+      }
+      $('botaoAvaliar').disabled = true;
+      const { ok, status, dados } = await api('/api/avaliacoes', 'POST', {
+        nota: notaEscolhida,
+        comentario: $('comentario').value,
+      });
+      if (status === 401) return irParaLogin();
+      if (!ok) {
+        $('erroAvaliacao').textContent = dados.erro || 'Não foi possível enviar.';
+        $('botaoAvaliar').disabled = false;
+        return;
+      }
+      mostrarAviso('💛 Obrigado pela avaliação!');
+      carregar();
+    });
+
+    let tempoAviso;
+    function mostrarAviso(texto) {
+      $('aviso').textContent = texto;
+      $('aviso').classList.add('visivel');
+      clearTimeout(tempoAviso);
+      tempoAviso = setTimeout(() => $('aviso').classList.remove('visivel'), 1800);
+    }
+
+    carregar();
+  </script>
+</body>
+</html>

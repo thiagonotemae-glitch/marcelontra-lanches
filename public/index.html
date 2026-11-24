@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marcelontra Lanches — Delivery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topo">
+    <div class="container">
+      <a href="index.html" class="logo"><span class="marca">M</span>Marcelontra<span>Lanches</span></a>
+      <nav>
+        <span class="menu-usuario" id="menuUsuario"></span>
+        <a class="botao-avaliar" href="avaliar.html">⭐ <span class="texto">Avalie-nos</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="banner">
+    
+    <div class="saudacao" id="saudacao" hidden></div>
+    <div class="container">
+      <h1>Bateu a fome?<br><em>A Marcelontra leva até você!</em></h1>
+      <p>Lanches artesanais, porções e bebidas geladas.</p>
+      <div class="selos">
+        <button type="button" class="selo selo-clicavel" id="seloTempo" aria-expanded="false" aria-controls="tabelaCidades">⏱️ 30 min a 1h30 · ver cidades ▾</button>
+        <button type="button" class="selo selo-clicavel" id="seloEntrega" aria-expanded="false" aria-controls="tabelaCidades">🛵 Entrega para a sua cidade ▾</button>
+        <span class="selo">💳 Pix, cartão ou dinheiro</span>
+      </div>
+      <!-- Tempo e taxa de cada cidade (abre ao tocar no selo do tempo) -->
+      <div class="tabela-cidades" id="tabelaCidades" hidden></div>
+    </div>
+  </section>
+
+  <main class="container">
+    <div class="categorias" id="categorias"></div>
+    <div id="cardapio"></div>
+
+    <!-- ============ SOBRE NÓS / MANUAL DA MARCA ============ -->
+    <section id="sobre" class="sobre" hidden>
+
+      <div class="sobre-hero">
+        <span class="marca-grande">M</span>
+        <div>
+          <p class="sobre-etiqueta">Manual da marca</p>
+          <h2>Marcelontra Lanches</h2>
+          <p class="slogan">“Bateu a fome? A Marcelontra leva até você!”</p>
+        </div>
+      </div>
+
+      <div class="sobre-bloco">
+        <h3>📖 Nossa história</h3>
+        <p>
+          A Marcelontra Lanches nasceu de uma ideia simples: fazer o lanche que a gente gostaria de comer.
+          Começamos pequenos, numa chapa e com muita vontade, servindo os amigos do bairro.
+          O boca a boca cresceu, os pedidos aumentaram e hoje levamos nossos lanches direto até a sua casa,
+          com o mesmo cuidado do primeiro hambúrguer.
+        </p>
+      </div>
+
+      <div class="sobre-grade">
+        <div class="sobre-cartao vermelho">
+          <span class="icone">🎯</span>
+          <h3>Missão</h3>
+          <p>Matar a fome de quem tem pressa com lanches saborosos, feitos na hora, com preço justo e entrega rápida.</p>
+        </div>
+        <div class="sobre-cartao amarelo">
+          <span class="icone">🔭</span>
+          <h3>Visão</h3>
+          <p>Ser a lanchonete delivery mais lembrada da região, a primeira opção quando bater a fome.</p>
+        </div>
+      </div>
+
+      <div class="sobre-bloco">
+        <h3>💛 Nossos valores</h3>
+        <div class="valores">
+          <div class="valor"><span>🍔</span><strong>Sabor de verdade</strong><p>Ingredientes frescos e receitas da casa, sem atalho.</p></div>
+          <div class="valor"><span>⚡</span><strong>Rapidez</strong><p>Fome não espera. Nosso pedido chega quentinho e no prazo.</p></div>
+          <div class="valor"><span>🤝</span><strong>Respeito ao cliente</strong><p>Atendimento simpático, preço honesto e transparência em tudo.</p></div>
+          <div class="valor"><span>🧼</span><strong>Higiene e qualidade</strong><p>Cozinha limpa, equipe treinada e cuidado em cada etapa.</p></div>
+          <div class="valor"><span>👨‍🍳</span><strong>Trabalho em equipe</strong><p>Da chapa até a entrega, todo mundo junto pelo mesmo objetivo.</p></div>
+          <div class="valor"><span>🌱</span><strong>Responsabilidade</strong><p>Menos desperdício, embalagens conscientes e apoio ao comércio local.</p></div>
+        </div>
+      </div>
+
+      <div class="sobre-bloco">
+        <h3>🎨 Identidade visual</h3>
+        <p>As cores e elementos que fazem a Marcelontra ser reconhecida em qualquer lugar.</p>
+
+        <h4>Cores</h4>
+        <div class="paleta">
+          <div class="cor"><span style="background:#da291c"></span><strong>Vermelho Marcelontra</strong><small>#DA291C · energia e apetite</small></div>
+          <div class="cor"><span style="background:#ffc72c"></span><strong>Amarelo Mostarda</strong><small>#FFC72C · alegria e destaque</small></div>
+          <div class="cor"><span style="background:#27251f"></span><strong>Carvão</strong><small>#27251F · textos</small></div>
+          <div class="cor"><span style="background:#fffaf0; border:1px solid var(--borda)"></span><strong>Creme</strong><small>#FFFAF0 · fundo</small></div>
+        </div>
+
+        <div class="sobre-grade" style="margin-top:20px">
+          <div>
+            <h4>Logo</h4>
+            <div class="logo-demo">
+              <span class="marca">M</span><b>Marcelontra</b><b class="amarelo">Lanches</b>
+            </div>
+            <p class="detalhe">O “M” amarelo sobre fundo vermelho é o nosso símbolo. Ele sempre aparece com o nome ao lado ou sozinho em espaços pequenos.</p>
+          </div>
+          <div>
+            <h4>Tipografia</h4>
+            <p class="fonte-demo fonte-titulo">Luckiest Guy</p>
+            <p class="detalhe">Nos <b>títulos</b>: letras grossas e em maiúsculas, com cara de cartaz de lanchonete.</p>
+            <p class="fonte-demo" style="font-size:1.8rem;margin-top:10px">Fredoka</p>
+            <p class="detalhe">Nos <b>textos</b>: arredondada, divertida e fácil de ler.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="sobre-bloco">
+        <h3>🗣️ Nosso jeito de falar</h3>
+        <div class="tom">
+          <div class="sim"><strong>✅ Somos</strong><p>Animados, próximos, diretos e bem-humorados. Falamos como um amigo que entende de lanche.</p></div>
+          <div class="nao"><strong>❌ Não somos</strong><p>Formais demais, frios ou cheios de termos difíceis. Nada de enrolação.</p></div>
+        </div>
+      </div>
+
+      <!-- ============ HOMENAGEM: A INSPIRAÇÃO DO NOME ============ -->
+      <div class="homenagem">
+        <div class="homenagem-foto">
+          <div class="moldura">
+            <img src="/imagem/marcelo_macrino.jpeg" alt="Marcelo Macrino, a inspiração da Marcelontra Lanches">
+          </div>
+          <span class="selo-m">M</span>
+        </div>
+
+        <div class="homenagem-texto">
+          <p class="sobre-etiqueta">⭐ A inspiração por trás do nome</p>
+          <h3>Marcelo Macrino</h3>
+          <p class="homenagem-sub">O homem que deu nome à Marcelontra</p>
+
+          <p>
+            Toda grande marca tem uma história, e a nossa começa com uma pessoa.
+            O nome <strong>Marcelontra Lanches</strong> nasceu como uma homenagem ao
+            <strong>Marcelo Macrino</strong>, a inspiração por trás de cada detalhe desta casa.
+          </p>
+          <p>
+            Em todas as nossas áreas, da chapa ao atendimento, do cardápio à entrega,
+            a gente se inspira nele pra fazer tudo com dedicação, capricho e aquele cuidado
+            de quem faz questão de fazer bem feito.
+          </p>
+          <p>
+            Por isso, cada lanche que sai daqui carrega um pouquinho do nome dele.
+            <strong>Marcelo, obrigado por ser a nossa inspiração. Esta casa também é sua!</strong> 💛
+          </p>
+
+          <div class="homenagem-qualidades">
+            <span>💪 Dedicação</span>
+            <span>🤝 Parceria</span>
+            <span>🔥 Energia</span>
+            <span>⭐ Inspiração</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sobre-final">
+        <p>Bateu a fome? 🍟</p>
+        <button class="botao" data-cat="todas">Ver o cardápio</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape-site">
+    Marcelontra Lanches © 2026
+  </footer>
+
+  <!-- Barra do carrinho: fica fixa embaixo da tela quando tem algo no carrinho -->
+  <div class="barra-carrinho" id="barraCarrinho" hidden>
+    <button type="button" id="abrirCarrinho">
+      <span class="barra-qtd">🛒 <span class="contador" id="contador">0</span></span>
+      <span class="barra-texto">Finalizar pedido</span>
+      <span class="barra-total" id="barraTotal">R$ 0,00</span>
+    </button>
+  </div>
+
+  <!-- Carrinho -->
+  <div class="fundo-escuro" id="fundoEscuro"></div>
+  <aside class="gaveta" id="gaveta">
+    <div class="gaveta-topo">
+      <h2 id="tituloGaveta">Seu carrinho</h2>
+      <button class="fechar" id="fecharCarrinho" aria-label="Fechar">×</button>
+    </div>
+    <div class="gaveta-conteudo" id="conteudoGaveta"></div>
+  </aside>
+
+  <!-- Janela para escolher a opção (sabor, com/sem gás...) -->
+  <div class="modal-fundo" id="modalOpcao" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+      <button class="fechar modal-fechar" id="fecharOpcao" aria-label="Fechar">×</button>
+      <div class="modal-foto" id="modalFoto"></div>
+      <div class="modal-corpo">
+        <h3 id="modalTitulo"></h3>
+        <p class="modal-preco" id="modalPreco"></p>
+        <p class="modal-pergunta" id="modalPergunta">Escolha uma opção:</p>
+        <div class="lista-opcoes" id="listaOpcoes"></div>
+        <button class="botao grande" id="confirmarOpcao" disabled>Escolha uma opção</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="aviso" id="aviso"></div>
+
+  <script src="comum.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

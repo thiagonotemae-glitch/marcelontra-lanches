@@ -1,0 +1,40 @@
+FOTOS DOS PRODUTOS — MARCELONTRA LANCHES
+=========================================
+
+Coloque aqui as fotos dos produtos. O NOME DO ARQUIVO = NOME DO PRODUTO.
+O site encontra a foto sozinho. Produto sem foto continua com o emoji.
+
+- Pode ser .jpg, .jpeg, .png, .webp, .gif ou .jfif
+- Não importa letra maiúscula, acento ou hífen
+  (ex.: "X-Burguer", "x burguer" e "X Burguer" funcionam igual)
+- Depois de colocar a foto, é só atualizar a página (Ctrl+F5).
+  Não precisa reiniciar o servidor.
+
+NOMES PARA USAR (cardápio atual)
+--------------------------------
+LANCHES
+  x-burguer.jpg
+  x-salada.jpg
+  x-bacon.jpg
+  x-tudo.jpg
+  cachorro-quente.jpg
+
+PORÇÕES
+  batata frita.jpg
+  batata com cheddar e bacon.jpg
+  nuggets.jpg
+  onion rings.jpg
+
+BEBIDAS
+  refrigerante lata.jpg   (ou só "refrigerante.jpg")
+  suco natural.jpg        (ou só "suco.jpg")
+  agua mineral.jpg        (ou só "agua.jpg")
+  milkshake.jpg
+
+SOBREMESAS
+  brownie.jpg
+  sorvete.jpg
+  churros.jpg
+
+DICA: se cadastrar um produto novo pelo painel, é só colocar
+uma foto aqui com o mesmo nome do produto.

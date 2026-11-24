@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel — Marcelontra Lanches</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topo" style="background: var(--texto); border-bottom: 4px solid var(--destaque);">
+    <div class="container">
+      <a href="admin.html" class="logo"><span class="marca">M</span>Marcelontra<span>Painel</span></a>
+      <nav>
+        <a href="index.html">Ver site</a>
+        <a href="#" id="sair">Sair</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" id="painel" hidden>
+    <section class="indicadores" id="indicadores"></section>
+
+    <div class="abas">
+      <button class="chip ativo" data-aba="pedidos">🧾 Pedidos</button>
+      <button class="chip" data-aba="produtos">🍔 Produtos</button>
+      <button class="chip" data-aba="clientes">👥 Clientes</button>
+    </div>
+
+    <!-- ABA PEDIDOS -->
+    <section id="aba-pedidos">
+      <div class="tabela-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Pagamento</th><th>Status</th></tr>
+          </thead>
+          <tbody id="tabelaPedidos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ABA PRODUTOS -->
+    <section id="aba-produtos" hidden>
+      <div class="cartao">
+        <h2>Cadastrar produto</h2>
+        <form class="formulario" id="formProduto" style="margin-top:12px">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+            <div class="campo"><label for="pNome">Nome</label><input id="pNome" required></div>
+            <div class="campo"><label for="pCategoria">Categoria</label><select id="pCategoria"></select></div>
+            <div class="campo"><label for="pPreco">Preço (R$)</label><input id="pPreco" type="number" step="0.01" min="0" required></div>
+            <div class="campo"><label for="pImagem">Emoji</label><input id="pImagem" placeholder="🍕" maxlength="4"></div>
+          </div>
+          <div class="campo"><label for="pDescricao">Descrição</label><input id="pDescricao"></div>
+          <p class="erro" id="erroProduto"></p>
+          <button class="botao" type="submit" style="align-self:flex-start">Salvar produto</button>
+        </form>
+      </div>
+
+      <div class="tabela-wrap" style="margin-bottom:48px">
+        <table>
+          <thead><tr><th></th><th>Produto</th><th>Categoria</th><th>Preço</th><th>No cardápio?</th></tr></thead>
+          <tbody id="tabelaProdutos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ABA CLIENTES -->
+    <section id="aba-clientes" hidden>
+      <div class="tabela-wrap" style="margin-bottom:48px">
+        <table>
+          <thead><tr><th>Cliente</th><th>Contato</th><th>Endereço</th><th>Pedidos</th><th>Total gasto</th></tr></thead>
+          <tbody id="tabelaClientes"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="comum.js"></script>
+  <script>
+    const STATUS = ['Recebido', 'Em preparo', 'Saiu para entrega', 'Entregue', 'Cancelado'];
+
+    // ---------- Indicadores ----------
+    async function carregarResumo() {
+      const { dados: r } = await api('/api/admin/resumo');
+      const top = r.maisVendidos[0];
+      $('indicadores').innerHTML = `
+        <div class="indicador"><small>Pedidos</small><strong>${r.total_pedidos}</strong></div>
+        <div class="indicador"><small>Faturamento</small><strong>${dinheiro(r.faturamento)}</strong></div>
+        <div class="indicador"><small>Clientes</small><strong>${r.clientes}</strong></div>
+        <div class="indicador"><small>Mais vendido</small><strong>${top ? esc(top.nome) : '—'}</strong></div>`;
+    }
+
+    // ---------- Pedidos ----------
+    async function carregarPedidos() {
+      // não redesenha enquanto alguém está escolhendo um status
+      if (document.activeElement?.tagName === 'SELECT') return;
+      const { dados: pedidos } = await api('/api/admin/pedidos');
+      $('tabelaPedidos').innerHTML = pedidos.length === 0
+        ? '<tr><td colspan="6" class="vazio">Nenhum pedido ainda. Faça um pelo site!</td></tr>'
+        : pedidos.map((p) => `
+          <tr>
+            <td><a href="pedido.html?id=${p.id}" target="_blank"><strong>${p.id}</strong></a><br><small>${esc(p.criado_em.slice(11, 16))}</small></td>
+            <td><strong>${esc(p.cliente_nome)}</strong><br><small>${esc(p.telefone)}<br>${esc(p.endereco_entrega)}${p.cidade ? `<br><strong>${esc(p.cidade)}</strong>` : ''}</small></td>
+            <td>${esc(p.resumo_itens)}${p.observacao ? `<br><small>📝 ${esc(p.observacao)}</small>` : ''}</td>
+            <td><strong>${dinheiro(p.total)}</strong></td>
+            <td>${esc(p.forma_pagamento)}</td>
+            <td>
+              <select data-pedido="${p.id}">
+                ${STATUS.map((s) => `<option ${s === p.status ? 'selected' : ''}>${s}</option>`).join('')}
+              </select>
+            </td>
+          </tr>`).join('');
+    }
+
+    $('tabelaPedidos').addEventListener('change', async (e) => {
+      const id = e.target.dataset.pedido;
+      if (!id) return;
+      await api(`/api/admin/pedidos/${id}/status`, 'PATCH', { status: e.target.value });
+      e.target.blur();
+      carregarPedidos();
+      carregarResumo();
+    });
+
+    // ---------- Produtos ----------
+    async function carregarProdutos() {
+      const [{ dados: produtos }, { dados: categorias }] = await Promise.all([
+        api('/api/admin/produtos'),
+        api('/api/categorias'),
+      ]);
+      $('pCategoria').innerHTML = categorias.map((c) => `<option value="${c.id}">${c.icone} ${esc(c.nome)}</option>`).join('');
+      $('tabelaProdutos').innerHTML = produtos.map((p) => `
+        <tr style="${p.disponivel ? '' : 'opacity:.5'}">
+          <td class="emoji">${figura(p)}</td>
+          <td><strong>${esc(p.nome)}</strong><br><small>${esc(p.descricao)}</small>${p.opcoes.length ? `<br><small><strong>Opções:</strong> ${p.opcoes.map(esc).join(' · ')}</small>` : ''}</td>
+          <td>${esc(p.categoria)}</td>
+          <td>${dinheiro(p.preco)}</td>
+          <td><input type="checkbox" data-produto="${p.id}" ${p.disponivel ? 'checked' : ''}></td>
+        </tr>`).join('');
+    }
+
+    $('tabelaProdutos').addEventListener('change', async (e) => {
+      const id = e.target.dataset.produto;
+      if (!id) return;
+      await api(`/api/admin/produtos/${id}/disponivel`, 'PATCH', { disponivel: e.target.checked });
+      carregarProdutos();
+    });
+
+    $('formProduto').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const { ok, dados } = await api('/api/admin/produtos', 'POST', {
+        nome: $('pNome').value,
+        categoria_id: Number($('pCategoria').value),
+        preco: $('pPreco').value,
+        imagem: $('pImagem').value,
+        descricao: $('pDescricao').value,
+      });
+      if (!ok) { $('erroProduto').textContent = dados.erro; return; }
+      $('erroProduto').textContent = '';
+      e.target.reset();
+      carregarProdutos();
+    });
+
+    // ---------- Clientes ----------
+    async function carregarClientes() {
+      const { dados: clientes } = await api('/api/admin/clientes');
+      $('tabelaClientes').innerHTML = clientes.length === 0
+        ? '<tr><td colspan="5" class="vazio">Nenhum cliente cadastrado ainda.</td></tr>'
+        : clientes.map((c) => `
+          <tr>
+            <td><strong>${esc(c.nome)}</strong><br><small>desde ${esc(c.criado_em.slice(0, 10).split('-').reverse().join('/'))}</small></td>
+            <td>${esc(c.email)} ${c.email_verificado ? '<span title="E-mail confirmado">✅</span>' : '<span class="tag" data-s="Em preparo">não confirmado</span>'}<br><small>${esc(c.telefone)}</small></td>
+            <td>${esc(c.endereco)}${c.cidade ? `<br><strong>${esc(c.cidade)}</strong>` : ''}</td>
+            <td>${c.pedidos}</td>
+            <td>${dinheiro(c.total_gasto)}</td>
+          </tr>`).join('');
+    }
+
+    // ---------- Abas ----------
+    document.querySelector('.abas').addEventListener('click', (e) => {
+      const botao = e.target.closest('[data-aba]');
+      if (!botao) return;
+      document.querySelectorAll('.abas .chip').forEach((b) => b.classList.toggle('ativo', b === botao));
+      for (const aba of ['pedidos', 'produtos', 'clientes']) {
+        $(`aba-${aba}`).hidden = botao.dataset.aba !== aba;
+      }
+      if (botao.dataset.aba === 'clientes') carregarClientes();
+    });
+
+    // ---------- Só entra quem é admin ----------
+    carregarUsuario().then((u) => {
+      if (!u) return irParaLogin();
+      if (u.tipo !== 'admin') {
+        document.querySelector('main').outerHTML = `
+          <main class="container"><div class="cartao vazio">
+            <span class="emoji">🔒</span>Esta área é só para a equipe da lanchonete.<br>
+            <a href="index.html">Voltar ao cardápio</a>
+          </div></main>`;
+        return;
+      }
+      $('painel').hidden = false;
+      carregarResumo();
+      carregarPedidos();
+      carregarProdutos();
+      setInterval(() => { carregarPedidos(); carregarResumo(); }, 5000); // novos pedidos aparecem sozinhos
+    });
+  </script>
+</body>
+</html>

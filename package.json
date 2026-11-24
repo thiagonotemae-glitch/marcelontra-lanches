@@ -1,0 +1,17 @@
+{
+  "name": "lanchonete-delivery",
+  "version": "1.0.0",
+  "description": "Site de delivery de lanchonete feito com Node.js e SQLite",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "resetar-banco": "node resetar-banco.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemailer": "^10.5.0"
+  }
+}

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu perfil — Marcelontra Lanches</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topo">
+    <div class="container">
+      <a href="index.html" class="logo"><span class="marca">M</span>Marcelontra<span>Lanches</span></a>
+      <nav>
+        <a href="index.html" class="esconder-celular">🍔 Cardápio</a>
+        <span class="menu-usuario" id="menuUsuario"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container pagina-perfil">
+    <div class="atalhos-pedido">
+      <a href="index.html"><span class="seta">←</span>Voltar ao cardápio</a>
+    </div>
+    <div id="conteudo"><p class="vazio">Carregando...</p></div>
+  </main>
+
+  <div class="aviso" id="aviso"></div>
+
+  <script src="comum.js"></script>
+  <script>
+    // "2026-11-15 13:12:43" → "15/11/2026"
+    const data = (texto) => texto ? texto.slice(0, 10).split('-').reverse().join('/') : '—';
+    const estrelas = (n) => '<span class="cheia">' + '★'.repeat(n) + '</span><span class="vazia">' + '★'.repeat(5 - n) + '</span>';
+
+    let perfil = null;
+    let cidades = [];
+    let editando = false;     // true = mostrando o formulário de editar dados
+    let etapaEmail = 'nada';  // 'nada', 'formulario' (novo e-mail + senha) ou 'codigo'
+    let modoEmail = 'email';  // 'terminal' quando o e-mail está em modo de teste
+
+    async function carregar() {
+      const [{ status, dados }, resCidades] = await Promise.all([
+        api('/api/perfil'), api('/api/cidades'), carregarUsuario(),
+      ]);
+      if (status === 401) return irParaLogin();
+      perfil = dados;
+      cidades = resCidades.dados;
+      // se tem troca de e-mail esperando código, já mostra o campo do código
+      if (perfil.email_pendente && etapaEmail === 'nada') etapaEmail = 'codigo';
+      desenhar();
+    }
+
+    function desenhar() {
+      const p = perfil;
+      $('conteudo').innerHTML = `
+        <!-- Cabeçalho do perfil -->
+        <section class="perfil-topo">
+          <span class="perfil-avatar">${esc(p.nome.charAt(0).toUpperCase())}</span>
+          <div>
+            <h1>${esc(p.nome)}</h1>
+            <p>${esc(p.email)}</p>
+            <div class="perfil-etiquetas">
+              <span>${p.tipo === 'admin' ? '🛠️ Administrador' : '🍔 Cliente'}</span>
+              <span>📅 Desde ${data(p.criado_em)}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Números da conta -->
+        <section class="perfil-numeros">
+          <div><strong>${p.pedidos.quantidade}</strong><small>${p.pedidos.quantidade == 1 ? 'pedido' : 'pedidos'}</small></div>
+          <div><strong>${dinheiro(p.pedidos.total_gasto)}</strong><small>gastos aqui</small></div>
+          <div><strong class="favorito">${p.favorito ? esc(p.favorito.nome) : '—'}</strong><small>seu favorito</small></div>
+        </section>
+
+        <!-- Dados pessoais (ver ou editar) -->
+        <section class="cartao">${editando ? htmlFormDados() : htmlDados()}</section>
+
+        <!-- E-mail da conta (ver ou trocar) -->
+        <section class="cartao">${htmlEmail()}</section>
+
+        <!-- Entrega na cidade dele -->
+        <section class="cartao">
+          <h2>🛵 Entrega na sua cidade</h2>
+          ${p.cidade ? `
+            <div class="perfil-entrega">
+              <div><small>Taxa</small><strong>${dinheiro(p.taxa_entrega)}</strong></div>
+              <div><small>Tempo</small><strong>${esc(p.tempo_entrega)}</strong></div>
+            </div>`
+            : '<p class="texto-suave">Escolha sua cidade em "Editar dados" para ver a taxa e o tempo de entrega.</p>'}
+          ${p.pedidos.ultimo ? `<p class="texto-suave" style="margin-top:10px">Último pedido em ${data(p.pedidos.ultimo)}.</p>` : ''}
+        </section>
+
+        <!-- Avaliação -->
+        <section class="cartao">
+          <h2>⭐ Sua avaliação</h2>
+          ${p.avaliacao ? `
+            <div class="estrelas-fixas">${estrelas(p.avaliacao.nota)}</div>
+            ${p.avaliacao.comentario ? `<p class="perfil-comentario">“${esc(p.avaliacao.comentario)}”</p>` : ''}
+            <a class="botao secundario" href="avaliar.html" style="margin-top:12px">Editar avaliação</a>`
+            : `<p class="texto-suave">Você ainda não avaliou a Marcelontra.</p>
+               <a class="botao" href="avaliar.html" style="margin-top:12px">Avaliar agora</a>`}
+        </section>
+
+        <div class="botoes-voltar">
+          <a class="botao grande" href="pedido.html">🧾 Ver meus pedidos</a>
+          <a class="botao secundario grande" href="index.html">🍔 Voltar ao cardápio</a>
+        </div>`;
+    }
+
+    // ---------- Dados pessoais ----------
+    const linha = (icone, rotulo, valor) => `
+      <div class="dado">
+        <span class="dado-icone">${icone}</span>
+        <div><small>${rotulo}</small><strong>${valor}</strong></div>
+      </div>`;
+
+    function htmlDados() {
+      const p = perfil;
+      return `
+        <div class="cartao-titulo">
+          <h2>👤 Dados pessoais</h2>
+          <button class="botao-editar" type="button" id="editarDados">✏️ Editar dados</button>
+        </div>
+        <div class="dados">
+          ${linha('🙂', 'Nome', esc(p.nome))}
+          ${linha('📱', 'Telefone', esc(p.telefone) || '—')}
+          ${linha('🏠', 'Endereço', esc(p.endereco) || '—')}
+          ${linha('📍', 'Cidade', esc(p.cidade) || 'Ainda não escolhida')}
+        </div>`;
+    }
+
+    function htmlFormDados() {
+      const p = perfil;
+      return `
+        <form class="formulario" id="formDados">
+          <h2>✏️ Editar dados</h2>
+          <div class="campo"><label for="pNome">Nome</label>
+            <input id="pNome" required value="${esc(p.nome)}" autocomplete="name"></div>
+          <div class="campo"><label for="pTelefone">Telefone (com DDD)</label>
+            <input id="pTelefone" type="tel" required value="${esc(p.telefone)}" inputmode="tel"
+                   placeholder="(11) 91234-5678" autocomplete="tel"></div>
+          <div class="campo"><label for="pEndereco">Endereço (rua, número e bairro)</label>
+            <input id="pEndereco" required value="${esc(p.endereco)}" placeholder="Ex.: Rua das Flores, 120 - Centro"
+                   autocomplete="street-address"></div>
+          <div class="campo"><label for="pCidade">Cidade</label>
+            <select id="pCidade" required>
+              <option value="">Selecione sua cidade</option>
+              ${cidades.map((c) => `
+                <option value="${c.id}" ${c.nome === p.cidade ? 'selected' : ''}>
+                  ${esc(c.nome)} — ${dinheiro(c.taxa_entrega)} · ${esc(c.tempo_entrega)}
+                </option>`).join('')}
+            </select></div>
+          <p class="erro" id="erroDados"></p>
+          <button class="botao grande" type="submit" id="salvarDados">Salvar alterações</button>
+          <button class="botao secundario grande" type="button" id="cancelarDados">Cancelar</button>
+        </form>`;
+    }
+
+    // ---------- E-mail ----------
+    function htmlEmail() {
+      const p = perfil;
+      const selo = p.email_verificado
+        ? '<span class="selo-ok">✅ confirmado</span>'
+        : '<span class="selo-pendente">não confirmado</span>';
+
+      if (etapaEmail === 'formulario') {
+        return `
+          <form class="formulario" id="formEmail">
+            <h2>✉️ Trocar e-mail</h2>
+            <p class="texto-suave">Vamos mandar um código para o e-mail novo. Ele só é trocado depois que você digitar o código.</p>
+            <div class="campo"><label for="novoEmail">E-mail novo</label>
+              <input id="novoEmail" type="email" required autocomplete="email" placeholder="seuemail@exemplo.com"></div>
+            <div class="campo"><label for="senhaAtual">Sua senha atual</label>
+              <input id="senhaAtual" type="password" required autocomplete="current-password"></div>
+            <p class="erro" id="erroEmail"></p>
+            <button class="botao grande" type="submit" id="enviarEmail">Enviar código</button>
+            <button class="botao secundario grande" type="button" id="cancelarEmail">Cancelar</button>
+          </form>`;
+      }
+
+      if (etapaEmail === 'codigo') {
+        return `
+          <form class="formulario" id="formCodigoEmail">
+            <h2>📩 Confirme o e-mail novo</h2>
+            <p class="texto-suave">Enviamos um código de 6 números para <strong>${esc(p.email_pendente)}</strong>.</p>
+            ${modoEmail === 'terminal' ? '<p class="aviso-teste">🧪 Modo de teste: o código apareceu no <strong>terminal do servidor</strong>.</p>' : ''}
+            <div class="campo"><label for="codigoEmail">Código</label>
+              <input id="codigoEmail" class="campo-codigo" required inputmode="numeric" autocomplete="one-time-code"
+                     maxlength="6" pattern="[0-9]{6}" placeholder="000000"></div>
+            <p class="erro" id="erroCodigoEmail"></p>
+            <button class="botao grande" type="submit" id="confirmarEmail">Confirmar e trocar</button>
+            <button class="botao secundario grande" type="button" id="reenviarEmail">Reenviar código</button>
+            <p class="troca">Não recebeu? Olhe a caixa de spam. · <a href="#" id="desistirEmail">Desistir da troca</a></p>
+          </form>`;
+      }
+
+      return `
+        <div class="cartao-titulo">
+          <h2>✉️ E-mail da conta</h2>
+          <button class="botao-editar" type="button" id="trocarEmail">✏️ Trocar e-mail</button>
+        </div>
+        <div class="dados">${linha('✉️', 'E-mail', `${esc(p.email)} ${selo}`)}</div>`;
+    }
+
+    // ---------- Cliques ----------
+    $('conteudo').addEventListener('click', async (e) => {
+      const id = e.target.id;
+      if (id === 'editarDados') { editando = true; desenhar(); $('pNome').focus(); }
+      if (id === 'cancelarDados') { editando = false; desenhar(); }
+      if (id === 'trocarEmail') { etapaEmail = 'formulario'; desenhar(); $('novoEmail').focus(); }
+      if (id === 'cancelarEmail') { etapaEmail = 'nada'; desenhar(); }
+
+      if (id === 'desistirEmail') {
+        e.preventDefault();
+        await api('/api/perfil/email', 'DELETE');
+        etapaEmail = 'nada';
+        perfil.email_pendente = null;
+        desenhar();
+      }
+
+      if (id === 'reenviarEmail') {
+        const { ok, dados } = await api('/api/perfil/email/reenviar', 'POST');
+        if (!ok) {
+          $('erroCodigoEmail').textContent = dados.erro;
+          if (dados.espera) esperarReenvio(dados.espera);
+          return;
+        }
+        modoEmail = dados.modo;
+        mostrarAviso('📩 Código reenviado!');
+        esperarReenvio(60);
+      }
+    });
+
+    // Campo do código: só números, no máximo 6
+    $('conteudo').addEventListener('input', (e) => {
+      if (e.target.id === 'codigoEmail') e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    });
+
+    // ---------- Envios dos formulários ----------
+    $('conteudo').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target.id;
+
+      // Salvar nome, telefone, endereço e cidade
+      if (form === 'formDados') {
+        $('salvarDados').disabled = true;
+        const { ok, dados } = await api('/api/perfil', 'PUT', {
+          nome: $('pNome').value,
+          telefone: $('pTelefone').value,
+          endereco: $('pEndereco').value,
+          cidade_id: Number($('pCidade').value),
+        });
+        if (!ok) {
+          $('erroDados').textContent = dados.erro || 'Não foi possível salvar.';
+          $('salvarDados').disabled = false;
+          return;
+        }
+        editando = false;
+        mostrarAviso('✅ Dados atualizados!');
+        carregar();
+      }
+
+      // Trocar e-mail — passo 1: e-mail novo + senha
+      if (form === 'formEmail') {
+        $('enviarEmail').disabled = true;
+        const { ok, dados } = await api('/api/perfil/email', 'POST', {
+          email: $('novoEmail').value,
+          senha: $('senhaAtual').value,
+        });
+        if (!ok) {
+          $('erroEmail').textContent = dados.erro || 'Não foi possível enviar o código.';
+          $('enviarEmail').disabled = false;
+          return;
+        }
+        perfil.email_pendente = dados.email;
+        modoEmail = dados.modo;
+        etapaEmail = 'codigo';
+        desenhar();
+        $('codigoEmail').focus();
+        esperarReenvio(60);
+      }
+
+      // Trocar e-mail — passo 2: código
+      if (form === 'formCodigoEmail') {
+        $('confirmarEmail').disabled = true;
+        const { ok, dados } = await api('/api/perfil/email/confirmar', 'POST', { codigo: $('codigoEmail').value });
+        if (!ok) {
+          $('erroCodigoEmail').textContent = dados.erro || 'Código incorreto.';
+          $('confirmarEmail').disabled = false;
+          return;
+        }
+        etapaEmail = 'nada';
+        mostrarAviso('✅ E-mail trocado!');
+        carregar();
+      }
+    });
+
+    // Desativa o "Reenviar código" por alguns segundos
+    let contagem;
+    function esperarReenvio(segundos) {
+      clearInterval(contagem);
+      let resta = segundos;
+      const atualizar = () => {
+        const botao = $('reenviarEmail');
+        if (!botao) return clearInterval(contagem);
+        botao.disabled = resta > 0;
+        botao.textContent = resta > 0 ? `Reenviar código (${resta}s)` : 'Reenviar código';
+      };
+      atualizar();
+      contagem = setInterval(() => { resta--; atualizar(); if (resta <= 0) clearInterval(contagem); }, 1000);
+    }
+
+    let tempoAviso;
+    function mostrarAviso(texto) {
+      $('aviso').textContent = texto;
+      $('aviso').classList.add('visivel');
+      clearTimeout(tempoAviso);
+      tempoAviso = setTimeout(() => $('aviso').classList.remove('visivel'), 2000);
+    }
+
+    carregar();
+  </script>
+</body>
+</html>

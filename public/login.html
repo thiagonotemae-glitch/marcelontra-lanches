@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrar — Marcelontra Lanches</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="pagina-login">
+
+  <header class="topo">
+    <div class="container">
+      <a href="index.html" class="logo"><span class="marca">M</span>Marcelontra<span>Lanches</span></a>
+      <nav><a href="index.html">← Cardápio</a></nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="caixa-login">
+      <div class="abas-login">
+        <button class="ativa" data-aba="entrar">Entrar</button>
+        <button data-aba="cadastro">Criar conta</button>
+      </div>
+
+      <!-- LOGIN -->
+      <form class="formulario" id="formEntrar">
+        <h1>Que bom te ver! 🍔</h1>
+        <p class="sub">Entre para fazer seu pedido.</p>
+        <div class="campo"><label for="loginEmail">E-mail</label>
+          <input id="loginEmail" type="email" required autocomplete="email"></div>
+        <div class="campo"><label for="loginSenha">Senha</label>
+          <input id="loginSenha" type="password" required autocomplete="current-password">
+          <a href="#esqueci" class="link-esqueci" data-ir="esqueci">Esqueci minha senha</a></div>
+        <p class="erro" id="erroEntrar"></p>
+        <button class="botao grande" type="submit">Entrar</button>
+        <p class="troca">Não tem conta? <a href="#cadastro" data-ir="cadastro">Cadastre-se</a></p>
+      </form>
+
+      <!-- CADASTRO -->
+      <form class="formulario" id="formCadastro" hidden>
+        <h1>Crie sua conta 🍟</h1>
+        <p class="sub">Leva menos de 1 minuto.</p>
+        <div class="campo"><label for="cadNome">Nome completo</label>
+          <input id="cadNome" required autocomplete="name"></div>
+        <div class="campo"><label for="cadEmail">E-mail</label>
+          <input id="cadEmail" type="email" required autocomplete="email"></div>
+        <div class="campo"><label for="cadTelefone">Telefone / WhatsApp</label>
+          <input id="cadTelefone" required autocomplete="tel" placeholder="(11) 99999-9999"></div>
+        <div class="campo"><label for="cadCidade">Cidade</label>
+          <select id="cadCidade" required>
+            <option value="">Carregando cidades...</option>
+          </select>
+          <small class="info-frete" id="infoFrete">Escolha sua cidade para ver a taxa de entrega.</small></div>
+        <div class="campo"><label for="cadEndereco">Endereço (rua, número e bairro)</label>
+          <input id="cadEndereco" required autocomplete="street-address" placeholder="Ex.: Rua das Flores, 120 - Centro"></div>
+        <div class="campo"><label for="cadSenha">Senha (mínimo 6 caracteres)</label>
+          <input id="cadSenha" type="password" required minlength="6" autocomplete="new-password"></div>
+        <div class="campo"><label for="cadSenha2">Repita a senha</label>
+          <input id="cadSenha2" type="password" required minlength="6" autocomplete="new-password"></div>
+        <p class="erro" id="erroCadastro"></p>
+        <button class="botao grande" type="submit">Criar conta</button>
+        <p class="troca">Já tem conta? <a href="#entrar" data-ir="entrar">Entrar</a></p>
+      </form>
+
+      <!-- CONFIRMAR E-MAIL (código de 6 dígitos) -->
+      <form class="formulario" id="formVerificar" hidden>
+        <h1>Confirme seu e-mail 📩</h1>
+        <p class="sub">Enviamos um código de 6 números para <strong id="emailVerificar"></strong>.</p>
+        <p class="aviso-teste" id="avisoTeste" hidden>
+          🧪 Modo de teste: o e-mail ainda não foi configurado, então o código apareceu no
+          <strong>terminal do servidor</strong>.
+        </p>
+        <div class="campo"><label for="codigo">Código</label>
+          <input id="codigo" class="campo-codigo" required inputmode="numeric" autocomplete="one-time-code"
+                 maxlength="6" pattern="[0-9]{6}" placeholder="000000"></div>
+        <p class="erro" id="erroVerificar"></p>
+        <p class="ok" id="okVerificar"></p>
+        <button class="botao grande" type="submit">Confirmar</button>
+        <button class="botao secundario grande" type="button" id="reenviar">Reenviar código</button>
+        <p class="troca">Não recebeu? Olhe a caixa de spam. · <a href="#entrar" data-ir="entrar">Voltar</a></p>
+      </form>
+
+      <!-- ESQUECI MINHA SENHA — passo 1: e-mail -->
+      <form class="formulario" id="formEsqueci" hidden>
+        <p class="passos">Passo <strong>1</strong> de 3</p>
+        <h1>Esqueceu a senha? 🔑</h1>
+        <p class="sub">Digite o e-mail da sua conta. Vamos mandar um código para você criar uma senha nova.</p>
+        <div class="campo"><label for="esqEmail">E-mail</label>
+          <input id="esqEmail" type="email" required autocomplete="email"></div>
+        <p class="erro" id="erroEsqueci"></p>
+        <button class="botao grande" type="submit">Enviar código</button>
+        <p class="troca">Lembrou? <a href="#entrar" data-ir="entrar">Voltar para o login</a></p>
+      </form>
+
+      <!-- ESQUECI MINHA SENHA — passo 2: código -->
+      <form class="formulario" id="formCodigoSenha" hidden>
+        <p class="passos">Passo <strong>2</strong> de 3</p>
+        <h1>Digite o código 📩</h1>
+        <p class="sub">Enviamos um código de 6 números para <strong id="emailSenha"></strong>.</p>
+        <p class="aviso-teste" id="avisoTesteSenha" hidden>
+          🧪 Modo de teste: o código apareceu no <strong>terminal do servidor</strong>.
+        </p>
+        <div class="campo"><label for="codigoSenha">Código</label>
+          <input id="codigoSenha" class="campo-codigo" required inputmode="numeric" autocomplete="one-time-code"
+                 maxlength="6" pattern="[0-9]{6}" placeholder="000000"></div>
+        <p class="erro" id="erroCodigoSenha"></p>
+        <p class="ok" id="okCodigoSenha"></p>
+        <button class="botao grande" type="submit">Verificar código</button>
+        <button class="botao secundario grande" type="button" id="reenviarSenha">Reenviar código</button>
+        <p class="troca">Não recebeu? Olhe a caixa de spam. · <a href="#esqueci" data-ir="esqueci">Trocar e-mail</a></p>
+      </form>
+
+      <!-- ESQUECI MINHA SENHA — passo 3: senha nova -->
+      <form class="formulario" id="formNovaSenha" hidden>
+        <p class="passos">Passo <strong>3</strong> de 3</p>
+        <h1>Crie sua senha nova ✅</h1>
+        <p class="sub">Código confirmado! Agora escolha a senha nova.</p>
+        <div class="campo"><label for="novaSenha">Nova senha (mínimo 6 caracteres)</label>
+          <input id="novaSenha" type="password" required minlength="6" autocomplete="new-password"></div>
+        <div class="campo"><label for="novaSenha2">Repita a nova senha</label>
+          <input id="novaSenha2" type="password" required minlength="6" autocomplete="new-password"></div>
+        <p class="erro" id="erroNovaSenha"></p>
+        <p class="ok" id="okNovaSenha"></p>
+        <button class="botao grande" type="submit">Salvar nova senha</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="comum.js"></script>
+  <script>
+    // Para onde ir depois de entrar (só aceita páginas deste site)
+    function destino(usuario) {
+      const voltar = new URLSearchParams(location.search).get('voltar') || '';
+      if (/^[a-z]+\.html(\?[a-z0-9=&]*)?$/i.test(voltar)) return voltar;
+      return usuario.tipo === 'admin' ? 'admin.html' : 'index.html';
+    }
+
+    // Cada "tela" da caixa de login é um formulário; só um aparece por vez
+    const TELAS = {
+      entrar: 'formEntrar',
+      cadastro: 'formCadastro',
+      verificar: 'formVerificar',
+      esqueci: 'formEsqueci',
+      codigoSenha: 'formCodigoSenha',
+      novaSenha: 'formNovaSenha',
+    };
+    function mostrarAba(aba) {
+      document.querySelectorAll('.abas-login button').forEach((b) => b.classList.toggle('ativa', b.dataset.aba === aba));
+      for (const [nome, id] of Object.entries(TELAS)) $(id).hidden = nome !== aba;
+      // aproveita o e-mail que a pessoa já digitou no login
+      if (aba === 'esqueci' && !$('esqEmail').value) $('esqEmail').value = $('loginEmail').value;
+    }
+
+    // ---------- Tela do código ----------
+    let emailPendente = '';
+    let contagem;
+
+    function mostrarVerificacao(email, modo) {
+      emailPendente = email;
+      $('emailVerificar').textContent = email;
+      $('avisoTeste').hidden = modo !== 'terminal';
+      $('erroVerificar').textContent = '';
+      $('okVerificar').textContent = '';
+      $('codigo').value = '';
+      mostrarAba('verificar');
+      $('codigo').focus();
+      esperarReenvio(60);
+    }
+
+    // Desativa um botão "Reenviar" por alguns segundos
+    const contagens = {};
+    function esperarReenvio(segundos, idBotao = 'reenviar') {
+      clearInterval(contagens[idBotao]);
+      const botao = $(idBotao);
+      botao.disabled = true;
+      let resta = segundos;
+      botao.textContent = `Reenviar código (${resta}s)`;
+      contagens[idBotao] = setInterval(() => {
+        resta--;
+        if (resta <= 0) {
+          clearInterval(contagens[idBotao]);
+          botao.disabled = false;
+          botao.textContent = 'Reenviar código';
+        } else {
+          botao.textContent = `Reenviar código (${resta}s)`;
+        }
+      }, 1000);
+    }
+
+    // Campos de código: só aceitam números, no máximo 6
+    for (const id of ['codigo', 'codigoSenha']) {
+      $(id).addEventListener('input', () => {
+        $(id).value = $(id).value.replace(/\D/g, '').slice(0, 6);
+      });
+    }
+
+    // ---------- Esqueci minha senha ----------
+    let emailSenha = '';
+    let codigoConfirmado = '';
+
+    // Passo 1: e-mail → servidor confere se a conta existe e manda o código
+    $('formEsqueci').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      $('erroEsqueci').textContent = '';
+      const botao = e.submitter;
+      botao.disabled = true;
+      botao.textContent = 'Enviando código...';
+      const { ok, dados } = await api('/api/esqueci-senha', 'POST', { email: $('esqEmail').value });
+      botao.disabled = false;
+      botao.textContent = 'Enviar código';
+      if (!ok) { $('erroEsqueci').textContent = dados.erro; return; }
+
+      emailSenha = dados.email;
+      $('emailSenha').textContent = dados.email;
+      $('avisoTesteSenha').hidden = dados.modo !== 'terminal';
+      $('codigoSenha').value = '';
+      $('erroCodigoSenha').textContent = '';
+      $('okCodigoSenha').textContent = '';
+      mostrarAba('codigoSenha');
+      $('codigoSenha').focus();
+      esperarReenvio(60, 'reenviarSenha');
+    });
+
+    // Passo 2: código → se estiver certo, libera a tela da senha nova
+    $('formCodigoSenha').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      $('erroCodigoSenha').textContent = '';
+      const codigo = $('codigoSenha').value;
+      const { ok, dados } = await api('/api/esqueci-senha/verificar', 'POST', { email: emailSenha, codigo });
+      if (!ok) { $('erroCodigoSenha').textContent = dados.erro; return; }
+
+      codigoConfirmado = codigo;
+      $('novaSenha').value = '';
+      $('novaSenha2').value = '';
+      mostrarAba('novaSenha');
+      $('novaSenha').focus();
+    });
+
+    $('reenviarSenha').addEventListener('click', async () => {
+      $('erroCodigoSenha').textContent = '';
+      $('okCodigoSenha').textContent = '';
+      const { ok, dados } = await api('/api/esqueci-senha', 'POST', { email: emailSenha });
+      if (!ok) {
+        $('erroCodigoSenha').textContent = dados.erro;
+        if (dados.espera) esperarReenvio(dados.espera, 'reenviarSenha');
+        return;
+      }
+      $('okCodigoSenha').textContent = 'Novo código enviado!';
+      esperarReenvio(60, 'reenviarSenha');
+    });
+
+    // Passo 3: senha nova + repetir → grava no banco
+    $('formNovaSenha').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      $('erroNovaSenha').textContent = '';
+      if ($('novaSenha').value !== $('novaSenha2').value) {
+        $('erroNovaSenha').textContent = 'As senhas não são iguais.';
+        return;
+      }
+      const { ok, dados } = await api('/api/esqueci-senha/nova-senha', 'POST', {
+        email: emailSenha,
+        codigo: codigoConfirmado,
+        senha: $('novaSenha').value,
+      });
+      if (!ok) { $('erroNovaSenha').textContent = dados.erro; return; }
+
+      e.submitter.disabled = true;
+      $('okNovaSenha').textContent = '🎉 Senha alterada com sucesso! Entrando...';
+      setTimeout(() => { location.href = destino(dados); }, 1500);
+    });
+
+    $('formVerificar').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      $('erroVerificar').textContent = '';
+      const { ok, dados } = await api('/api/verificar', 'POST', { email: emailPendente, codigo: $('codigo').value });
+      if (!ok) { $('erroVerificar').textContent = dados.erro; return; }
+      location.href = destino(dados);
+    });
+
+    $('reenviar').addEventListener('click', async () => {
+      $('erroVerificar').textContent = '';
+      $('okVerificar').textContent = '';
+      const { ok, dados } = await api('/api/reenviar-codigo', 'POST', { email: emailPendente });
+      if (!ok) {
+        $('erroVerificar').textContent = dados.erro;
+        if (dados.espera) esperarReenvio(dados.espera);
+        return;
+      }
+      $('avisoTeste').hidden = dados.modo !== 'terminal';
+      $('okVerificar').textContent = 'Novo código enviado!';
+      esperarReenvio(60);
+    });
+
+    document.addEventListener('click', (e) => {
+      const alvo = e.target.closest('[data-aba], [data-ir]');
+      if (!alvo) return;
+      e.preventDefault();
+      mostrarAba(alvo.dataset.aba || alvo.dataset.ir);
+    });
+    if (location.hash === '#cadastro') mostrarAba('cadastro');
+    if (location.hash === '#esqueci') mostrarAba('esqueci');
+
+    $('formEntrar').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const { ok, dados } = await api('/api/login', 'POST', {
+        email: $('loginEmail').value,
+        senha: $('loginSenha').value,
+      });
+      if (dados.precisaVerificar) return mostrarVerificacao(dados.email, dados.modo);
+      if (!ok) { $('erroEntrar').textContent = dados.erro; return; }
+      location.href = destino(dados);
+    });
+
+    $('formCadastro').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if ($('cadSenha').value !== $('cadSenha2').value) {
+        $('erroCadastro').textContent = 'As senhas não são iguais.';
+        return;
+      }
+      const botao = e.submitter;
+      botao.disabled = true;
+      botao.textContent = 'Enviando código...';
+      const { ok, dados } = await api('/api/cadastro', 'POST', {
+        nome: $('cadNome').value,
+        email: $('cadEmail').value,
+        telefone: $('cadTelefone').value,
+        endereco: $('cadEndereco').value,
+        cidade_id: Number($('cadCidade').value),
+        senha: $('cadSenha').value,
+      });
+      botao.disabled = false;
+      botao.textContent = 'Criar conta';
+      if (!ok) { $('erroCadastro').textContent = dados.erro; return; }
+      // Conta criada: agora precisa digitar o código que chegou no e-mail
+      mostrarVerificacao(dados.email, dados.modo);
+    });
+
+    // Cidades atendidas (vêm da tabela "cidades" do banco)
+    let cidades = [];
+    api('/api/cidades').then(({ dados }) => {
+      cidades = dados;
+      $('cadCidade').innerHTML = '<option value="">Selecione sua cidade</option>' +
+        cidades.map((c) => `<option value="${c.id}">${esc(c.nome)} — entrega ${dinheiro(c.taxa_entrega)} · ${esc(c.tempo_entrega)}</option>`).join('');
+    });
+    $('cadCidade').addEventListener('change', () => {
+      const c = cidades.find((x) => x.id == $('cadCidade').value);
+      $('infoFrete').textContent = c
+        ? `🛵 Entrega em ${c.nome}: ${dinheiro(c.taxa_entrega)} · ⏱️ ${c.tempo_entrega}`
+        : 'Escolha sua cidade para ver a taxa de entrega.';
+    });
+
+    // Se já estiver logado, não precisa ficar aqui
+    carregarUsuario().then((u) => { if (u) location.href = destino(u); });
+  </script>
+</body>
+</html>

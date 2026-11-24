@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meus pedidos — Marcelontra Lanches</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topo">
+    <div class="container">
+      <a href="index.html" class="logo"><span class="marca">M</span>Marcelontra<span>Lanches</span></a>
+      <nav>
+        <a href="index.html" class="esconder-celular">🍔 Cardápio</a>
+        <span class="menu-usuario" id="menuUsuario"></span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container" style="max-width: 720px;">
+    <div id="conteudo"></div>
+  </main>
+
+  <script src="comum.js"></script>
+  <script>
+    const ETAPAS = [
+      { nome: 'Recebido', icone: '📝' },
+      { nome: 'Em preparo', icone: '👨‍🍳' },
+      { nome: 'Saiu para entrega', icone: '🛵' },
+      { nome: 'Entregue', icone: '✅' },
+    ];
+
+    const id = new URLSearchParams(location.search).get('id');
+
+    // Sem número na URL: lista os pedidos do usuário (vem do banco)
+    async function mostrarLista() {
+      const { status, dados: pedidos } = await api('/api/meus-pedidos');
+      if (status === 401) return irParaLogin();
+
+      $('conteudo').innerHTML = `
+        <div class="cartao">
+          <h1>Meus pedidos</h1>
+          ${pedidos.length === 0
+            ? '<p class="vazio"><span class="emoji">🧾</span>Você ainda não fez nenhum pedido.<br><a href="index.html">Ver cardápio</a></p>'
+            : pedidos.map((p) => `
+                <a class="item-carrinho" href="pedido.html?id=${p.id}" style="text-decoration:none">
+                  <span class="emoji">🧾</span>
+                  <div class="nome">Pedido #${p.id}<small>${esc(p.criado_em)} · ${p.quantidade_itens} ${p.quantidade_itens == 1 ? 'item' : 'itens'}</small></div>
+                  <div style="text-align:right">
+                    <strong>${dinheiro(p.total)}</strong><br>
+                    <span class="tag" data-s="${esc(p.status)}">${esc(p.status)}</span>
+                  </div>
+                </a>`).join('')}
+        </div>
+        ${botoesVoltar(false)}`;
+    }
+
+    // Botões do fim da página: voltar ao cardápio (e ver todos os pedidos)
+    function botoesVoltar(mostrarTodos) {
+      return `
+        <div class="botoes-voltar">
+          <a class="botao grande" href="index.html">🍔 Voltar ao cardápio</a>
+          ${mostrarTodos ? '<a class="botao secundario grande" href="pedido.html">🧾 Ver todos os meus pedidos</a>' : ''}
+        </div>`;
+    }
+
+    async function carregar() {
+      const { ok, status, dados: p } = await api(`/api/pedidos/${encodeURIComponent(id)}`);
+      if (status === 401) return irParaLogin();
+      if (!ok) {
+        $('conteudo').innerHTML = '<div class="cartao"><p class="vazio"><span class="emoji">😕</span>Pedido não encontrado.</p></div>';
+        return;
+      }
+      const indiceAtual = ETAPAS.findIndex((e) => e.nome === p.status);
+      const subtotal = p.itens.reduce((s, i) => s + i.preco_unitario * i.quantidade, 0);
+
+      const linhaStatus = p.status === 'Cancelado'
+        ? '<p class="erro" style="margin-top:16px">Este pedido foi cancelado.</p>'
+        : `<div class="linha-status">
+            ${ETAPAS.map((e, i) => `
+              <div class="etapa ${i <= indiceAtual ? 'feita' : ''} ${i === indiceAtual ? 'atual' : ''}">
+                <div class="bolinha">${e.icone}</div>${e.nome}
+              </div>`).join('')}
+          </div>`;
+
+      $('conteudo').innerHTML = `
+        <div class="atalhos-pedido">
+          <a href="index.html"><span class="seta">←</span>Voltar ao cardápio</a>
+          <a href="pedido.html" class="seta-direita">Todos os meus pedidos<span class="seta">→</span></a>
+        </div>
+        <div class="cartao" style="margin-top:12px">
+          <p style="color:var(--texto-suave)">Pedido #${p.id} · ${esc(p.criado_em)}</p>
+          <h1>${p.status === 'Entregue' ? 'Bom apetite! 😋' : 'Obrigado pelo pedido! 🎉'}</h1>
+          <span class="tag" data-s="${esc(p.status)}">${esc(p.status)}</span>
+          ${p.tempo_entrega && !['Entregue', 'Cancelado'].includes(p.status)
+            ? `<p class="tempo-entrega">⏱️ Tempo de entrega para ${esc(p.cidade)}: <strong>${esc(p.tempo_entrega)}</strong></p>` : ''}
+          ${linhaStatus}
+        </div>
+
+        <div class="cartao">
+          <h2>Itens</h2>
+          ${p.itens.map((i) => `
+            <div class="item-carrinho">
+              <span class="emoji">${figura(i)}</span>
+              <div class="nome">${i.quantidade}x ${esc(i.nome)}${i.opcao ? ` <span class="opcao-item">${esc(i.opcao)}</span>` : ''}</div>
+              <strong>${dinheiro(i.preco_unitario * i.quantidade)}</strong>
+            </div>`).join('')}
+          <div class="totais">
+            <div><span>Subtotal</span><span>${dinheiro(subtotal)}</span></div>
+            <div><span>Taxa de entrega${p.cidade ? ` <small>(${esc(p.cidade)})</small>` : ''}</span><span>${dinheiro(p.taxa_entrega)}</span></div>
+            <div class="total"><span>Total</span><span>${dinheiro(p.total)}</span></div>
+          </div>
+        </div>
+
+        <div class="cartao">
+          <h2>Entrega</h2>
+          <p><strong>${esc(p.cliente_nome)}</strong> · ${esc(p.telefone)}</p>
+          <p>${esc(p.endereco_entrega)}${p.cidade ? ` — <strong>${esc(p.cidade)}</strong>` : ''}</p>
+          <p style="margin-top:8px">Pagamento: <strong>${esc(p.forma_pagamento)}</strong></p>
+          ${p.observacao ? `<p>Observação: ${esc(p.observacao)}</p>` : ''}
+        </div>
+        ${botoesVoltar(true)}`;
+    }
+
+    carregarUsuario();
+    if (id) {
+      carregar();
+      setInterval(carregar, 5000); // atualiza o status sozinho a cada 5 segundos
+    } else {
+      mostrarLista();
+    }
+  </script>
+</body>
+</html>
